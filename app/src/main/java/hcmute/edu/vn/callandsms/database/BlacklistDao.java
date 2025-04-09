@@ -26,4 +26,8 @@ public interface BlacklistDao {
     @Query("SELECT * FROM blacklist WHERE phoneNumber = :phoneNumber LIMIT 1")
     BlacklistEntity findByPhoneSync(String phoneNumber);
 
+    @Query("SELECT EXISTS(SELECT 1 FROM blacklist WHERE phoneNumber = :phoneNumber)")
+    boolean isNumberBlacklisted(String phoneNumber);
+
+
 }
