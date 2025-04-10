@@ -9,14 +9,16 @@ import android.content.Context;
         entities = {
                 CallEntity.class,
                 SmsEntity.class,
-                BlacklistEntity.class // 👈 THÊM DÒNG NÀY
+                BlacklistEntity.class,
+                ConversationEntity.class    // 👈 THÊM DÒNG NÀY
         },
-        version = 1,
+        version = 8,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
 
     private static AppDatabase instance;
+    public abstract ConversationDao conversationDao();
 
     public abstract CallDao callDao();
     public abstract SmsDao smsDao();

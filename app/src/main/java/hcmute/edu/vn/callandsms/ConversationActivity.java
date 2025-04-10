@@ -1,10 +1,10 @@
 package hcmute.edu.vn.callandsms;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +16,7 @@ import java.util.List;
 
 import hcmute.edu.vn.callandsms.adapter.MessageAdapter;
 import hcmute.edu.vn.callandsms.database.AppDatabase;
+import hcmute.edu.vn.callandsms.database.ConversationEntity;
 import hcmute.edu.vn.callandsms.database.SmsDao;
 import hcmute.edu.vn.callandsms.database.SmsEntity;
 
@@ -26,6 +27,9 @@ public class ConversationActivity extends AppCompatActivity {
     private String phoneNumber;
     private EditText editTextMessage;
     private ImageButton buttonSend;
+    private TextView textViewPhoneNumber;
+    private ImageButton buttonBack;
+
     private String normalizePhoneNumber(String number) {
         if (number == null) return "";
         if (number.startsWith("+84")) {
@@ -33,16 +37,15 @@ public class ConversationActivity extends AppCompatActivity {
         }
         return number;
     }
+
     private void checkPhoneNumberInDatabase(String phoneNumber) {
         AppDatabase db = AppDatabase.getInstance(this);
         SmsDao smsDao = db.smsDao();
 
         smsDao.getSmsByPhoneNumber(phoneNumber).observe(this, smsEntity -> {
             if (smsEntity != null) {
-                // Nếu số điện thoại tồn tại
                 Log.d("DEBUG", "Số điện thoại đã tồn tại trong cơ sở dữ liệu: " + phoneNumber);
             } else {
-                // Nếu số điện thoại không tồn tại
                 Log.d("DEBUG", "Số điện thoại không tồn tại trong cơ sở dữ liệu: " + phoneNumber);
             }
         });
@@ -59,14 +62,19 @@ public class ConversationActivity extends AppCompatActivity {
 
         if (phoneNumber == null || phoneNumber.isEmpty()) {
             Toast.makeText(this, "Không nhận được số điện thoại", Toast.LENGTH_SHORT).show();
-            finish(); // hoặc trở lại activity trước đó
+            finish();
             return;
         }
+
         phoneNumber = normalizePhoneNumber(phoneNumber);
         Log.d("DEBUG", "Received phone number after normalize: " + phoneNumber);
-        setTitle("Conversation with " + phoneNumber);
 
-        // Kiểm tra số điện thoại đã có trong database hay chưa
+        // Gán số điện thoại vào header
+        textViewPhoneNumber = findViewById(R.id.textViewPhoneNumber);
+        buttonBack = findViewById(R.id.buttonBack);
+        textViewPhoneNumber.setText(phoneNumber);
+        buttonBack.setOnClickListener(v -> finish());
+
         checkPhoneNumberInDatabase(phoneNumber);
 
         recyclerView = findViewById(R.id.recyclerViewConversation);
@@ -84,12 +92,17 @@ public class ConversationActivity extends AppCompatActivity {
 
     private void loadMessages() {
         AppDatabase db = AppDatabase.getInstance(this);
+
         db.smsDao().getSmsByPhoneNumber(phoneNumber).observe(this, smsEntities -> {
             Log.d("DEBUG", "Loading messages for: " + phoneNumber);
+
             messageList.clear();
             messageList.addAll(smsEntities);
             adapter.notifyDataSetChanged();
-            recyclerView.scrollToPosition(messageList.size() - 1);
+
+            if (!messageList.isEmpty()) {
+                recyclerView.scrollToPosition(messageList.size() - 1);
+            }
         });
     }
 
@@ -101,20 +114,29 @@ public class ConversationActivity extends AppCompatActivity {
         newSms.setContent(content);
         newSms.setPhoneNumber(normalizePhoneNumber(phoneNumber));
         newSms.setTime(System.currentTimeMillis());
-        newSms.setSentByMe(true); // Tin nhắn do mình gửi
+        newSms.setSentByMe(true);
 
-        editTextMessage.setText(""); // Xoá nội dung vừa nhập
+        editTextMessage.setText("");
 
-        // Thêm vào UI ngay lập tức
         messageList.add(newSms);
         adapter.notifyItemInserted(messageList.size() - 1);
         recyclerView.scrollToPosition(messageList.size() - 1);
 
-        // Lưu vào database trong background
         new Thread(() -> {
-            AppDatabase.getInstance(this).smsDao().insertSms(newSms);
-            Log.d("SMS_DEBUG", "Inserted new message to DB");
-        }).start();
-    }
+            AppDatabase db = AppDatabase.getInstance(this);
 
+            // 1. Lưu tin nhắn mới
+            db.smsDao().insertSms(newSms);
+
+            // 2. Cập nhật conversation_table
+            ConversationEntity conversation = new ConversationEntity();
+            conversation.phoneNumber = newSms.getPhoneNumber();
+            conversation.latestMessage = newSms.getContent();
+            conversation.time = newSms.getTime();
+            db.conversationDao().insertOrUpdate(conversation);
+
+            Log.d("SMS_DEBUG", "Inserted message and updated conversation");
+        }).start();
+
+    }
 }

@@ -1,15 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
+    android:fitsSystemWindows="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Header -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="?attr/colorPrimary"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp">
+
+        <ImageButton
+            android:id="@+id/buttonBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_back"
+            android:contentDescription="Back"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true" />
+
+        <TextView
+            android:id="@+id/textViewPhoneNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Phone Number"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_centerInParent="true" />
+    </RelativeLayout>
+
+    <!-- Danh sách tin nhắn -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewConversation"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="582dp"
         android:layout_weight="1" />
 
+    <!-- Khung nhập và gửi tin nhắn -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -18,15 +50,16 @@
 
         <EditText
             android:id="@+id/editTextMessage"
-            android:layout_width="314dp"
-            android:layout_height="wrap_content"
+            android:layout_width="268dp"
+            android:layout_height="55dp"
             android:layout_weight="1"
             android:hint="Type your message..." />
 
         <ImageButton
             android:id="@+id/buttonSend"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="45dp"
+            android:layout_height="58dp"
+            android:background="@android:color/transparent"
             android:contentDescription="Send"
             android:src="@drawable/ic_send" />
     </LinearLayout>

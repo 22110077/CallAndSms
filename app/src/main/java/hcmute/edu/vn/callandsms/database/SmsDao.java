@@ -18,4 +18,6 @@ public interface SmsDao {
     void deleteSmsByIds(List<Integer> smsIds);
     @Query("SELECT * FROM sms_table WHERE phone_number = :phoneNumber ORDER BY time ASC")
     LiveData<List<SmsEntity>> getSmsByPhoneNumber(String phoneNumber);
+    @Query("SELECT * FROM sms_table WHERE time IN (SELECT MAX(time) FROM sms_table GROUP BY phone_number) ORDER BY time DESC")
+    LiveData<List<SmsEntity>> getLatestMessagesForEachConversation();
 }

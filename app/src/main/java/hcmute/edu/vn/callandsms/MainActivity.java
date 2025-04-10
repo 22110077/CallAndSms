@@ -37,21 +37,20 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // 👇 THÊM ĐOẠN NÀY: Yêu cầu làm default dialer (nếu chưa phải)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            String defaultSmsPackage = Telephony.Sms.getDefaultSmsPackage(this);
-            if (!getPackageName().equals(defaultSmsPackage)) {
-                Intent intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
-                intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, getPackageName());
-                startActivity(intent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
             }
         }
 
         checkAndRequestPermissions();
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
-                == PackageManager.PERMISSION_GRANTED) {
-            Log.d("PERMISSION", "RECEIVE_SMS OK");
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECEIVE_SMS}, 100);
         }
+
             bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
         // Load mặc định SmsFragment
@@ -82,6 +81,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     private void checkAndRequestPermissions() {
+        List<String> permissionsToRequest = new ArrayList<>();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
+
         String[] permissions = {
                 Manifest.permission.ANSWER_PHONE_CALLS,
                 Manifest.permission.READ_PHONE_STATE,
@@ -91,8 +99,6 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.SEND_SMS,
                 Manifest.permission.READ_SMS
         };
-
-        List<String> permissionsToRequest = new ArrayList<>();
 
         for (String permission : permissions) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
@@ -113,22 +119,14 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
         if (requestCode == 101) {
-            for (int i = 0; i < permissions.length; i++) {
-                Log.d("PERMISSION", permissions[i] + " -> " +
-                        (grantResults[i] == PackageManager.PERMISSION_GRANTED ? "GRANTED" : "DENIED"));
-            }
-
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Ứng dụng cần quyền nhận SMS để hoạt động", Toast.LENGTH_LONG).show();
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("PERMISSION", "Đã được cấp quyền POST_NOTIFICATIONS");
             } else {
-                Log.d("PERMISSION", "Đã có quyền RECEIVE_SMS, mọi thứ OK!");
+                Log.d("PERMISSION", "Bị từ chối quyền POST_NOTIFICATIONS");
             }
         }
     }
-
     private boolean loadFragment(Fragment fragment) {
         if (fragment != null) {
             getSupportFragmentManager()
