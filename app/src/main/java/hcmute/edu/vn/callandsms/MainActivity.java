@@ -8,8 +8,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Telephony;
 import android.telecom.TelecomManager;
+import android.util.Log;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -33,16 +37,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // 👇 THÊM ĐOẠN NÀY: Yêu cầu làm default dialer (nếu chưa phải)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
-            if (!getPackageName().equals(telecomManager.getDefaultDialerPackage())) {
-                Intent intent = new Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER);
-                intent.putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, getPackageName());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            String defaultSmsPackage = Telephony.Sms.getDefaultSmsPackage(this);
+            if (!getPackageName().equals(defaultSmsPackage)) {
+                Intent intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+                intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, getPackageName());
                 startActivity(intent);
             }
         }
 
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        checkAndRequestPermissions();
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
+                == PackageManager.PERMISSION_GRANTED) {
+            Log.d("PERMISSION", "RECEIVE_SMS OK");
+        }
+            bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
         // Load mặc định SmsFragment
         loadFragment(new SmsFragment());
@@ -70,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
                 notificationManager.createNotificationChannel(channel);
             }
         }
-        checkAndRequestPermissions();
     }
     private void checkAndRequestPermissions() {
         String[] permissions = {
@@ -99,6 +108,27 @@ public class MainActivity extends AppCompatActivity {
             );
         }
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == 101) {
+            for (int i = 0; i < permissions.length; i++) {
+                Log.d("PERMISSION", permissions[i] + " -> " +
+                        (grantResults[i] == PackageManager.PERMISSION_GRANTED ? "GRANTED" : "DENIED"));
+            }
+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Ứng dụng cần quyền nhận SMS để hoạt động", Toast.LENGTH_LONG).show();
+            } else {
+                Log.d("PERMISSION", "Đã có quyền RECEIVE_SMS, mọi thứ OK!");
+            }
+        }
+    }
+
     private boolean loadFragment(Fragment fragment) {
         if (fragment != null) {
             getSupportFragmentManager()

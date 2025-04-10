@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
-
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
-
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
@@ -20,7 +17,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS"/>
     <uses-permission android:name="android.permission.MODIFY_PHONE_STATE" tools:ignore="ProtectedPermissions"/>
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -39,7 +35,6 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
             <!-- Để được chọn làm Default Phone App -->
             <intent-filter>
                 <action android:name="android.intent.action.DIAL" />
@@ -48,20 +43,19 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="tel" />
             </intent-filter>
-
             <intent-filter>
                 <action android:name="android.telecom.action.CHANGE_DEFAULT_DIALER" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <!-- Nhận tin nhắn SMS -->
-        <receiver android:name=".receiver.SmsReceiver" android:exported="true"
+        <receiver android:name=".receiver.SmsReceiver"
+            android:exported="true"
             android:permission="android.permission.BROADCAST_SMS">
-            <intent-filter>
+            <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
-
         <!-- Service để từ chối cuộc gọi hoặc xử lý blacklist -->
         <activity android:name=".service.BlacklistActivity"
             android:exported="true">
@@ -70,26 +64,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".ConversationActivity" />
         <activity android:name=".ui.NewMessageActivity" />
-
         <receiver android:name=".receiver.CallReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
         </receiver>
-
-        <service android:name=".service.CallService" />
-
-        <receiver android:name=".receiver.CallReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.PHONE_STATE" />
-            </intent-filter>
-        </receiver>
-
     </application>
-
 </manifest>

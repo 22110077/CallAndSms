@@ -24,6 +24,12 @@ public class SmsReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d("SMS_RECEIVER", "Chưa có quyền RECEIVE_SMS => bỏ qua tin nhắn");
+            return;
+        }
+
         if ("android.provider.Telephony.SMS_RECEIVED".equals(intent.getAction())) {
             Bundle bundle = intent.getExtras();
             if (bundle != null) {
@@ -49,7 +55,7 @@ public class SmsReceiver extends BroadcastReceiver {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                                     != PackageManager.PERMISSION_GRANTED) {
-                                // Không có quyền gửi thông báo, bạn có thể log hoặc bỏ qua
+                                Log.d("SMS_RECEIVER", "Chưa có quyền RECEIVE_SMS");
                                 return;
                             }
                         }
@@ -72,6 +78,8 @@ public class SmsReceiver extends BroadcastReceiver {
                                 Log.e("DEBUG", "Insert failed: " + e.getMessage(), e);
                             }
                         });
+
+                        Log.d("SMS_RECEIVER", "Có quyền RECEIVE_SMS => xử lý tin nhắn");
 
                         // Check blacklist
                         if (isNumberBlacklisted(sender, context)) {
